@@ -223,35 +223,11 @@ static void simwrite(const char *const *action) {
   sg_size_t size = parse_size(size_str);
   sg_offset_t position= parse_offset(position_str);
   double clock = MSG_get_clock();       /* this "call" is free thanks to inlining */
-  
+  file = get_file_descriptor("slow",file_name,index);
+  ACT_DEBUG("Entering Read: %s (size: %llu)", NAME, size);
+  MSG_file_seek(file,position,SEEK_SET);
+  MSG_file_write(file, size);
   XBT_INFO("20 position is  %llu ,size is %llu",position,size);
-  if(position<4096 && (position+size)<4096)
-  {
-  file = get_file_descriptor("fast",file_name,index);
-  ACT_DEBUG("Entering Read: %s (size: %llu)", NAME, size);
-  MSG_file_seek(file,position,SEEK_SET);
-  MSG_file_write(file, size);
-  }
-  else if(position<4096 && (position+size)>4096)
-  {
-  //read the Head part
-  file = get_file_descriptor("fast",file_name,index);
-  ACT_DEBUG("Entering Read: %s (size: %llu)", NAME, size);
-  MSG_file_seek(file,position,SEEK_SET);
-  MSG_file_write(file, 4096-position);
-  //read the data part
-  file = get_file_descriptor("slow",file_name,index);
-  ACT_DEBUG("Entering Read: %s (size: %llu)", NAME, size);
-  MSG_file_seek(file,4096,SEEK_SET);
-  MSG_file_write(file, size-(4096-position));
-  }
-  else
-  {
-  file = get_file_descriptor("slow",file_name,index);
-  ACT_DEBUG("Entering Read: %s (size: %llu)", NAME, size);
-  MSG_file_seek(file,position,SEEK_SET);
-  MSG_file_write(file, size);
-  }
   XBT_INFO("write worker %s%s is done",processid,index);
   log_action(action, MSG_get_clock() - clock);
 }
